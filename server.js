@@ -53,25 +53,48 @@ app.post('/webhook/whatsapp', async (req, res) => {
     // Detectar comandos
     const mensajeLower = mensajeOriginal.toLowerCase().trim();
 
-    if (mensajeLower === 'reporte' || mensajeLower.includes('dame un reporte') || mensajeLower.includes('generar reporte')) {
-      // Generar reporte
-      console.log('📊 Generando reporte...');
+    // COMANDOS DE REPORTE
+    if (mensajeLower === 'reporte' || mensajeLower === 'reporte general') {
+      console.log('📊 Generando reporte general...');
       const reporte = await reportService.generarReporte();
       respuesta = reportService.formatearReporte(reporte);
+
+    } else if (mensajeLower === 'reporte hoy' || mensajeLower === 'hoy') {
+      console.log('📊 Generando reporte de hoy...');
+      const reporte = await reportService.generarReporteHoy();
+      respuesta = reportService.formatearReporteHoy(reporte);
+
+    } else if (mensajeLower === 'reporte quincena' || mensajeLower === 'quincena') {
+      console.log('📊 Generando reporte de quincena...');
+      const reporte = await reportService.generarReporteQuincena();
+      respuesta = reportService.formatearReporteQuincena(reporte);
+
+    } else if (mensajeLower.startsWith('reporte empleado ') || mensajeLower.startsWith('empleado ')) {
+      const nombreEmpleado = mensajeOriginal.replace(/^reporte empleado |^empleado /i, '').trim();
+      console.log(`📊 Generando reporte de empleado: ${nombreEmpleado}`);
+      const reporte = await reportService.generarReporteEmpleado(nombreEmpleado);
+      respuesta = reportService.formatearReporteEmpleado(reporte);
+
+    } else if (mensajeLower.startsWith('reporte obra ') || mensajeLower.startsWith('obra ')) {
+      const nombreObra = mensajeOriginal.replace(/^reporte obra |^obra /i, '').trim();
+      console.log(`📊 Generando reporte de obra: ${nombreObra}`);
+      const reporte = await reportService.generarReporteObra(nombreObra);
+      respuesta = reportService.formatearReporteObra(reporte);
 
     } else if (mensajeLower === 'ayuda' || mensajeLower === 'help' || mensajeLower === '?') {
       // Mostrar ayuda
       respuesta = '📱 *COMANDOS DISPONIBLES*\n\n';
-      respuesta += '📊 *reporte* - Genera un reporte de actividades\n\n';
-      respuesta += '🏗️ *Para registrar trabajo en obras:*\n';
+      respuesta += '📊 *REPORTES:*\n';
+      respuesta += '• *reporte* - Reporte general\n';
+      respuesta += '• *reporte hoy* - Registros de hoy\n';
+      respuesta += '• *reporte quincena* - Resumen quincenal\n';
+      respuesta += '• *reporte empleado Juan* - Por empleado\n';
+      respuesta += '• *reporte obra Centro* - Por obra\n\n';
+      respuesta += '🏗️ *REGISTRAR TRABAJO:*\n';
       respuesta += 'Envía un mensaje como:\n';
-      respuesta += '"Juan trabajó 5 horas en obra Centro pintando paredes, obra en progreso"\n\n';
-      respuesta += 'La IA extraerá automáticamente:\n';
-      respuesta += '• 👷 Empleado\n';
-      respuesta += '• 🏗️ Obra\n';
-      respuesta += '• ⏱️ Horas\n';
-      respuesta += '• ✏️ Tarea\n';
-      respuesta += '• 📊 Estado de obra';
+      respuesta += '"Juan trabajó 5 horas en obra Centro pintando paredes"\n\n';
+      respuesta += 'La IA extraerá:\n';
+      respuesta += '👷 Empleado | 🏗️ Obra | ⏱️ Horas | ✏️ Tarea | 📊 Estado';
 
     } else {
       // Procesar mensaje normal con IA

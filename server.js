@@ -62,14 +62,16 @@ app.post('/webhook/whatsapp', async (req, res) => {
     } else if (mensajeLower === 'ayuda' || mensajeLower === 'help' || mensajeLower === '?') {
       // Mostrar ayuda
       respuesta = '📱 *COMANDOS DISPONIBLES*\n\n';
-      respuesta += '📊 *reporte* - Genera un reporte de tus actividades\n\n';
-      respuesta += '💬 *Para registrar actividades:*\n';
+      respuesta += '📊 *reporte* - Genera un reporte de actividades\n\n';
+      respuesta += '🏗️ *Para registrar trabajo en obras:*\n';
       respuesta += 'Envía un mensaje como:\n';
-      respuesta += '"Trabajé 3 horas en el proyecto web haciendo el login"\n\n';
+      respuesta += '"Juan trabajó 5 horas en obra Centro pintando paredes, obra en progreso"\n\n';
       respuesta += 'La IA extraerá automáticamente:\n';
-      respuesta += '• Horas trabajadas\n';
-      respuesta += '• Nombre del proyecto\n';
-      respuesta += '• Descripción de la tarea';
+      respuesta += '• 👷 Empleado\n';
+      respuesta += '• 🏗️ Obra\n';
+      respuesta += '• ⏱️ Horas\n';
+      respuesta += '• ✏️ Tarea\n';
+      respuesta += '• 📊 Estado de obra';
 
     } else {
       // Procesar mensaje normal con IA
@@ -86,13 +88,11 @@ app.post('/webhook/whatsapp', async (req, res) => {
       const datosFila = {
         fecha,
         hora,
-        numero: numeroWhatsApp,
-        mensajeOriginal,
-        tipo: datosExtraidos.tipo || '',
-        proyecto: datosExtraidos.proyecto || '',
-        persona: datosExtraidos.persona || nombreUsuario,
+        empleado: datosExtraidos.empleado || nombreUsuario,
+        obra: datosExtraidos.obra || '',
         horas: datosExtraidos.horas || '',
-        tarea: datosExtraidos.tarea || ''
+        tarea: datosExtraidos.tarea || '',
+        estado: datosExtraidos.estado || ''
       };
 
       // Guardar en Google Sheets
@@ -102,17 +102,20 @@ app.post('/webhook/whatsapp', async (req, res) => {
       // Preparar respuesta para el usuario
       respuesta = '✅ Registro guardado correctamente\n\n';
 
-      if (datosExtraidos.tipo) {
-        respuesta += `📋 Tipo: ${datosExtraidos.tipo}\n`;
+      if (datosFila.empleado) {
+        respuesta += `👷 Empleado: ${datosFila.empleado}\n`;
       }
-      if (datosExtraidos.proyecto) {
-        respuesta += `🗂️ Proyecto: ${datosExtraidos.proyecto}\n`;
+      if (datosFila.obra) {
+        respuesta += `🏗️ Obra: ${datosFila.obra}\n`;
       }
-      if (datosExtraidos.horas) {
-        respuesta += `⏱️ Horas: ${datosExtraidos.horas}\n`;
+      if (datosFila.horas) {
+        respuesta += `⏱️ Horas: ${datosFila.horas}\n`;
       }
-      if (datosExtraidos.tarea) {
-        respuesta += `✏️ Tarea: ${datosExtraidos.tarea}\n`;
+      if (datosFila.tarea) {
+        respuesta += `✏️ Tarea: ${datosFila.tarea}\n`;
+      }
+      if (datosFila.estado) {
+        respuesta += `📊 Estado: ${datosFila.estado}\n`;
       }
 
       respuesta += `\n🕐 Registrado: ${fecha} ${hora}`;
@@ -166,13 +169,11 @@ app.post('/test/mensaje', async (req, res) => {
     const datosFila = {
       fecha: ahora.toLocaleDateString('es-ES'),
       hora: ahora.toLocaleTimeString('es-ES'),
-      numero: 'TEST',
-      mensajeOriginal: mensaje,
-      tipo: datosExtraidos.tipo || '',
-      proyecto: datosExtraidos.proyecto || '',
-      persona: datosExtraidos.persona || 'Usuario Test',
+      empleado: datosExtraidos.empleado || 'Usuario Test',
+      obra: datosExtraidos.obra || '',
       horas: datosExtraidos.horas || '',
-      tarea: datosExtraidos.tarea || ''
+      tarea: datosExtraidos.tarea || '',
+      estado: datosExtraidos.estado || ''
     };
 
     // Guardar en Sheets

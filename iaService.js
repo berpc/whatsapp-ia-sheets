@@ -24,41 +24,37 @@ class IAService {
     if (!this.configurado) {
       console.log('⚠️ IA no configurada, devolviendo datos sin procesar');
       return {
-        tipo: 'mensaje',
-        proyecto: '',
-        persona: '',
+        empleado: '',
+        obra: '',
         horas: this.extraerHorasSimple(mensaje),
-        tarea: mensaje
+        tarea: mensaje,
+        estado: ''
       };
     }
 
     try {
       console.log('🤖 Enviando mensaje a Claude...');
 
-      const prompt = `Analiza el siguiente mensaje y extrae la información estructurada. El mensaje puede ser sobre:
-- Registro de horas trabajadas en un proyecto
-- Asignación de tareas
-- Reportes de trabajo
-- Cualquier otro tipo de comunicación laboral
+      const prompt = `Analiza el siguiente mensaje y extrae la información estructurada sobre registro de trabajo en obras de construcción.
 
 Mensaje del usuario:
 "${mensaje}"
 
 Extrae y devuelve la siguiente información en formato JSON:
 {
-  "tipo": "registro_horas|tarea|reporte|consulta|otro",
-  "proyecto": "nombre del proyecto mencionado o vacío",
-  "persona": "nombre de la persona mencionada o vacío",
+  "empleado": "nombre del empleado o trabajador mencionado o vacío",
+  "obra": "nombre de la obra, proyecto o lugar de trabajo mencionado o vacío",
   "horas": "número de horas trabajadas (solo el número) o vacío",
-  "tarea": "descripción breve de la tarea o actividad realizada"
+  "tarea": "descripción breve de la tarea o actividad realizada",
+  "estado": "estado de la obra: en_progreso|completada|pausada|pendiente o vacío si no se menciona"
 }
 
 Reglas importantes:
 - Si no se menciona algún campo, déjalo vacío ""
 - Para "horas", devuelve solo el número sin texto (ej: "3" no "3 horas")
 - Para "tarea", resume en máximo 100 caracteres
-- Detecta el tipo más apropiado según el contexto
-- Si el mensaje menciona "trabajé X horas en Y", tipo debe ser "registro_horas"
+- Para "estado", detecta palabras como: terminado/completado=completada, avanzando/trabajando=en_progreso, detenido/parado=pausada, por hacer=pendiente
+- Si el mensaje dice "Juan trabajó 5 horas en obra Centro", empleado=Juan, obra=Centro, horas=5
 
 Responde ÚNICAMENTE con el JSON, sin texto adicional.`;
 
@@ -89,21 +85,21 @@ Responde ÚNICAMENTE con el JSON, sin texto adicional.`;
       } catch (parseError) {
         console.error('⚠️ Error parseando JSON de IA, usando fallback');
         datosExtraidos = {
-          tipo: 'mensaje',
-          proyecto: '',
-          persona: '',
+          empleado: '',
+          obra: '',
           horas: '',
-          tarea: mensaje
+          tarea: mensaje,
+          estado: ''
         };
       }
 
       // Validar y limpiar datos
       return {
-        tipo: datosExtraidos.tipo || 'mensaje',
-        proyecto: datosExtraidos.proyecto || '',
-        persona: datosExtraidos.persona || '',
+        empleado: datosExtraidos.empleado || '',
+        obra: datosExtraidos.obra || '',
         horas: datosExtraidos.horas || '',
-        tarea: datosExtraidos.tarea || mensaje.substring(0, 100)
+        tarea: datosExtraidos.tarea || mensaje.substring(0, 100),
+        estado: datosExtraidos.estado || ''
       };
 
     } catch (error) {
@@ -121,11 +117,11 @@ Responde ÚNICAMENTE con el JSON, sin texto adicional.`;
       // Fallback: devolver datos básicos con extracción simple
       console.log('   ⚙️  Usando extracción simple sin IA');
       return {
-        tipo: 'mensaje',
-        proyecto: '',
-        persona: '',
+        empleado: '',
+        obra: '',
         horas: this.extraerHorasSimple(mensaje),
-        tarea: mensaje
+        tarea: mensaje,
+        estado: ''
       };
     }
   }

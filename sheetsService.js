@@ -46,21 +46,19 @@ class SheetsService {
   async agregarFila(datos) {
     try {
       const {
-        fecha, hora, numero, mensajeOriginal,
-        tipo, proyecto, persona, horas, tarea
+        fecha, hora, empleado, obra, horas, tarea, estado
       } = datos;
 
       const values = [[
-        fecha, hora, numero, mensajeOriginal,
-        tipo || '', proyecto || '', persona || '',
-        horas || '', tarea || ''
+        fecha, hora, empleado || '', obra || '',
+        horas || '', tarea || '', estado || ''
       ]];
 
       console.log('📝 Agregando fila a spreadsheet:', this.spreadsheetId);
 
       const result = await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: 'A:I',
+        range: 'A:G',
         valueInputOption: 'USER_ENTERED',
         resource: { values },
       });

@@ -42,7 +42,7 @@ class ReportService {
       // Leer todas las filas de la hoja
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'A:I',
+        range: 'A:G',
       });
 
       const rows = response.data.values;
@@ -62,13 +62,11 @@ class ReportService {
       const registros = data.map(row => ({
         fecha: row[0] || '',
         hora: row[1] || '',
-        numero: row[2] || '',
-        mensaje: row[3] || '',
-        tipo: row[4] || '',
-        proyecto: row[5] || '',
-        persona: row[6] || '',
-        horas: row[7] || '',
-        tarea: row[8] || ''
+        empleado: row[2] || '',
+        obra: row[3] || '',
+        horas: row[4] || '',
+        tarea: row[5] || '',
+        estado: row[6] || ''
       }));
 
       // Aplicar filtros si existen
@@ -87,9 +85,15 @@ class ReportService {
         });
       }
 
-      if (filtro.proyecto) {
+      if (filtro.obra) {
         registrosFiltrados = registrosFiltrados.filter(r =>
-          r.proyecto.toLowerCase().includes(filtro.proyecto.toLowerCase())
+          r.obra.toLowerCase().includes(filtro.obra.toLowerCase())
+        );
+      }
+
+      if (filtro.empleado) {
+        registrosFiltrados = registrosFiltrados.filter(r =>
+          r.empleado.toLowerCase().includes(filtro.empleado.toLowerCase())
         );
       }
 
@@ -100,25 +104,45 @@ class ReportService {
         return sum + horas;
       }, 0);
 
-      const proyectos = {};
+      // Agrupar por obra
+      const obras = {};
       registrosFiltrados.forEach(r => {
-        if (r.proyecto) {
-          if (!proyectos[r.proyecto]) {
-            proyectos[r.proyecto] = {
-              nombre: r.proyecto,
+        if (r.obra) {
+          if (!obras[r.obra]) {
+            obras[r.obra] = {
+              nombre: r.obra,
+              registros: 0,
+              horas: 0,
+              estado: r.estado || ''
+            };
+          }
+          obras[r.obra].registros++;
+          obras[r.obra].horas += parseFloat(r.horas) || 0;
+          if (r.estado) obras[r.obra].estado = r.estado;
+        }
+      });
+
+      // Agrupar por empleado
+      const empleados = {};
+      registrosFiltrados.forEach(r => {
+        if (r.empleado) {
+          if (!empleados[r.empleado]) {
+            empleados[r.empleado] = {
+              nombre: r.empleado,
               registros: 0,
               horas: 0
             };
           }
-          proyectos[r.proyecto].registros++;
-          proyectos[r.proyecto].horas += parseFloat(r.horas) || 0;
+          empleados[r.empleado].registros++;
+          empleados[r.empleado].horas += parseFloat(r.horas) || 0;
         }
       });
 
       return {
         totalRegistros,
         totalHoras: totalHoras.toFixed(2),
-        proyectos: Object.values(proyectos),
+        obras: Object.values(obras),
+        empleados: Object.values(empleados),
         ultimosRegistros: registrosFiltrados.slice(-5).reverse()
       };
 
@@ -129,15 +153,24 @@ class ReportService {
   }
 
   formatearReporte(reporte) {
-    let mensaje = '📊 *REPORTE DE ACTIVIDADES*\n\n';
+    let mensaje = '📊 *REPORTE DE OBRAS*\n\n';
 
     mensaje += `📝 Total de registros: ${reporte.totalRegistros}\n`;
     mensaje += `⏱️ Total de horas: ${reporte.totalHoras}h\n\n`;
 
-    if (reporte.proyectos && reporte.proyectos.length > 0) {
-      mensaje += '🗂️ *Por Proyecto:*\n';
-      reporte.proyectos.forEach(p => {
-        mensaje += `  • ${p.nombre}: ${p.horas.toFixed(1)}h (${p.registros} registros)\n`;
+    if (reporte.obras && reporte.obras.length > 0) {
+      mensaje += '🏗️ *Por Obra:*\n';
+      reporte.obras.forEach(o => {
+        const estadoIcon = o.estado === 'completada' ? '✅' : o.estado === 'en_progreso' ? '🔄' : o.estado === 'pausada' ? '⏸️' : '';
+        mensaje += `  • ${o.nombre}: ${o.horas.toFixed(1)}h ${estadoIcon}\n`;
+      });
+      mensaje += '\n';
+    }
+
+    if (reporte.empleados && reporte.empleados.length > 0) {
+      mensaje += '👷 *Por Empleado:*\n';
+      reporte.empleados.forEach(e => {
+        mensaje += `  • ${e.nombre}: ${e.horas.toFixed(1)}h (${e.registros} reg)\n`;
       });
       mensaje += '\n';
     }
@@ -146,8 +179,8 @@ class ReportService {
       mensaje += '📋 *Últimos Registros:*\n';
       reporte.ultimosRegistros.forEach((r, i) => {
         if (i < 5) {
-          mensaje += `  ${i + 1}. ${r.fecha} - ${r.horas}h - ${r.proyecto || 'Sin proyecto'}\n`;
-          mensaje += `     ${r.tarea.substring(0, 60)}${r.tarea.length > 60 ? '...' : ''}\n`;
+          mensaje += `  ${i + 1}. ${r.fecha} - ${r.empleado || 'Sin nombre'}\n`;
+          mensaje += `     🏗️ ${r.obra || 'Sin obra'} - ${r.horas}h\n`;
         }
       });
     }

@@ -4,12 +4,32 @@ const { google } = require('googleapis');
 class ReportService {
   constructor() {
     this.spreadsheetId = process.env.GOOGLE_SHEET_ID;
-    const credentialsPath = process.env.GOOGLE_CREDENTIALS_PATH || './credentials/credentials.json';
 
-    const auth = new google.auth.GoogleAuth({
-      keyFile: credentialsPath,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-    });
+    let auth;
+
+    // Opción 1: Usar credenciales desde variable de entorno (para producción/Render)
+    if (process.env.GOOGLE_CREDENTIALS) {
+      try {
+        const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+        auth = new google.auth.GoogleAuth({
+          credentials: credentials,
+          scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+        });
+        console.log('   🔑 Report Service usando credenciales desde variable de entorno');
+      } catch (error) {
+        console.error('❌ Error parseando GOOGLE_CREDENTIALS:', error.message);
+        throw error;
+      }
+    }
+    // Opción 2: Usar archivo de credenciales (para desarrollo local)
+    else {
+      const credentialsPath = process.env.GOOGLE_CREDENTIALS_PATH || './credentials/credentials.json';
+      auth = new google.auth.GoogleAuth({
+        keyFile: credentialsPath,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+      });
+      console.log('   📁 Report Service usando credenciales desde archivo');
+    }
 
     this.sheets = google.sheets({ version: 'v4', auth });
     console.log('✅ Report Service iniciado');

@@ -1,0 +1,17 @@
+{
+  "watch": [
+    "server.js",
+    "iaService.js",
+    "sheetsService.js",
+    "credentials/.env"
+  ],
+  "ext": "js,json",
+  "ignore": [
+    "node_modules/",
+    "credentials/credentials.json"
+  ],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": "1000"
+}
